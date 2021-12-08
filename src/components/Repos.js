@@ -2,8 +2,48 @@ import React from 'react';
 import styled from 'styled-components';
 import { GithubContext } from '../context/context';
 import { ExampleChart, Pie3D, Column3D, Bar3D, Doughnut2D } from './Charts';
+
 const Repos = () => {
-  return <h2>repos component</h2>;
+  const { repos } = React.useContext(GithubContext);
+
+  let languages = repos.reduce((acc, curr) => {
+    const { language } = curr;
+    if (!language) return acc;
+    if (!acc[language]) {
+      acc[language] = { label: language, value: 1 };
+    }
+    acc[language] = { ...acc[language], value: acc[language].value + 1 };
+    return acc;
+  }, {});
+
+  languages = Object.values(languages)
+    .sort((a, b) => {
+      return b.value - a.value;
+    })
+    .slice(0, 5);
+
+  const chartData = [
+    {
+      label: 'HTML',
+      value: '13',
+    },
+    {
+      label: 'CSS',
+      value: '23',
+    },
+    {
+      label: 'JS',
+      value: '80',
+    },
+  ];
+
+  return (
+    <section className="section">
+      <Wrapper className="section-center">
+        <Pie3D data={languages} />
+      </Wrapper>
+    </section>
+  );
 };
 
 const Wrapper = styled.div`
