@@ -6,21 +6,46 @@ import { ExampleChart, Pie3D, Column3D, Bar3D, Doughnut2D } from './Charts';
 const Repos = () => {
   const { repos } = React.useContext(GithubContext);
 
-  let languages = repos.reduce((acc, curr) => {
-    const { language } = curr;
+  const languages = repos.reduce((acc, curr) => {
+    const { language, stargazers_count } = curr;
     if (!language) return acc;
     if (!acc[language]) {
-      acc[language] = { label: language, value: 1 };
+      acc[language] = { label: language, value: 1, stars: stargazers_count };
     }
-    acc[language] = { ...acc[language], value: acc[language].value + 1 };
+    acc[language] = {
+      ...acc[language],
+      value: acc[language].value + 1,
+      stars: acc[language].stars + stargazers_count,
+    };
     return acc;
   }, {});
 
-  languages = Object.values(languages)
+  const mostUsed = Object.values(languages)
     .sort((a, b) => {
       return b.value - a.value;
     })
     .slice(0, 5);
+
+  const mostPopular = Object.values(languages)
+    .sort((a, b) => {
+      return b.stars - a.stars;
+    })
+    .map((item) => {
+      return { ...item, value: item.stars };
+    });
+
+  let { stars, forks } = repos.reduce(
+    (acc, curr) => {
+      const { stargazers_count, name, forks } = curr;
+      acc.stars[stargazers_count] = { label: name, value: stargazers_count };
+      acc.forks[forks] = { label: name, value: forks };
+      return acc;
+    },
+    { stars: {}, forks: {} }
+  );
+
+  stars = Object.values(stars).slice(-5).reverse();
+  forks = Object.values(forks).slice(-5).reverse();
 
   const chartData = [
     {
@@ -40,7 +65,10 @@ const Repos = () => {
   return (
     <section className="section">
       <Wrapper className="section-center">
-        <Pie3D data={languages} />
+        <Pie3D data={mostUsed} />
+        <Column3D data={stars} />
+        <Doughnut2D data={mostPopular} />
+        <Bar3D data={forks} />
       </Wrapper>
     </section>
   );
