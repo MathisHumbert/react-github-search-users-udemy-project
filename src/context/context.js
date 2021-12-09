@@ -21,10 +21,34 @@ const GithubProvider = ({ children }) => {
 
   const searchGithubUser = async (user) => {
     setLoading(true);
+    toggleError();
     try {
       const response = await axios(`${rootUrl}/users/${user}`);
       setGithubUser(response.data);
-      toggleError();
+
+      const { login, followers_url } = response.data;
+
+      // const reposResponse = await axios(
+      //   `${rootUrl}/users/${login}/repos?per_page=100`
+      // );
+      // setRepos(reposResponse.data);
+
+      // const followersResponse = await axios(`${followers_url}?per_page=100`);
+      // setFollowers(followersResponse.data);
+
+      await Promise.allSettled([
+        axios(`${rootUrl}/users/${login}/repos?per_page=100`),
+        axios(`${followers_url}?per_page=100`),
+      ]).then((results) => {
+        const [repos, followers] = results;
+        const status = 'fulfilled';
+        if (repos.status === status) {
+          setRepos(repos.value.data);
+        }
+        if (followers.status === status) {
+          setFollowers(followers.value.data);
+        }
+      });
     } catch (error) {
       console.log(error);
       toggleError(true, 'there is no user with that username');
